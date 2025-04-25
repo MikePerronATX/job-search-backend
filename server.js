@@ -17,7 +17,7 @@ app.get('/jobs', async (req, res) => {
 
   try {
     const response = await axios.get(
-      `https://remotive.io/api/remote-jobs?search=${encodeURIComponent(
+      `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(
         search
       )}`,
       { httpsAgent: agent }
