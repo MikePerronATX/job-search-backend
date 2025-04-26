@@ -11,20 +11,25 @@ app.use(cors());
 
 app.get('/jobs', async (req, res) => {
   const search = req.query.search || '';
-
-  // Optional agent to fix strict SSL issues
-  const agent = new https.Agent({ rejectUnauthorized: false });
+  const location = req.query.location || '';
 
   try {
     const response = await axios.get(
       `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(
         search
-      )}`,
-      { httpsAgent: agent }
+      )}`
     );
-    res.json({ jobs: response.data.jobs });
+
+    // Filter jobs manually by location (case-insensitive)
+    const filteredJobs = response.data.jobs.filter((job) =>
+      job.candidate_required_location
+        .toLowerCase()
+        .includes(location.toLowerCase())
+    );
+
+    res.json({ jobs: filteredJobs });
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching from Remotive:', error.message);
     res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 });
