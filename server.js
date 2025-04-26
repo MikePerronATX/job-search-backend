@@ -1,7 +1,7 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const https = require('https');
 require('dotenv').config();
 
 const app = express();
@@ -17,21 +17,25 @@ app.get('/jobs', async (req, res) => {
     const response = await axios.get(
       `https://remotive.io/api/remote-jobs?search=${encodeURIComponent(search)}`
     );
-
     let jobs = response.data.jobs;
 
-    // Filter jobs by location if provided
-    if (location) {
-      jobs = jobs.filter((job) =>
-        job.candidate_required_location
-          .toLowerCase()
-          .includes(location.toLowerCase())
+    // Only try to filter if jobs actually exist
+    if (location && jobs && jobs.length > 0) {
+      jobs = jobs.filter(
+        (job) =>
+          job.candidate_required_location &&
+          job.candidate_required_location
+            .toLowerCase()
+            .includes(location.toLowerCase())
       );
     }
 
     res.json({ jobs });
   } catch (error) {
-    console.error(error);
+    console.error(
+      'Error in /jobs route:',
+      error.response ? error.response.data : error.message
+    );
     res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 });
