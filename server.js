@@ -15,21 +15,23 @@ app.get('/jobs', async (req, res) => {
 
   try {
     const response = await axios.get(
-      `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(
-        search
-      )}`
+      `https://remotive.io/api/remote-jobs?search=${encodeURIComponent(search)}`
     );
 
-    // Filter jobs manually by location (case-insensitive)
-    const filteredJobs = response.data.jobs.filter((job) =>
-      job.candidate_required_location
-        .toLowerCase()
-        .includes(location.toLowerCase())
-    );
+    let jobs = response.data.jobs;
 
-    res.json({ jobs: filteredJobs });
+    // Filter jobs by location if provided
+    if (location) {
+      jobs = jobs.filter((job) =>
+        job.candidate_required_location
+          .toLowerCase()
+          .includes(location.toLowerCase())
+      );
+    }
+
+    res.json({ jobs });
   } catch (error) {
-    console.error('Error fetching from Remotive:', error.message);
+    console.error(error);
     res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 });
