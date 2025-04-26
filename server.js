@@ -14,32 +14,38 @@ app.get('/jobs', async (req, res) => {
   const location = req.query.location || '';
 
   try {
-    const response = await axios.get(
+    const remotiveResponse = await axios.get(
       `https://remotive.io/api/remote-jobs?search=${encodeURIComponent(search)}`
     );
-    let jobs = response.data.jobs;
+    const jobsData = remotiveResponse.data;
 
-    // Only try to filter if jobs actually exist
-    if (location && jobs && jobs.length > 0) {
-      jobs = jobs.filter(
-        (job) =>
-          job.candidate_required_location &&
-          job.candidate_required_location
-            .toLowerCase()
-            .includes(location.toLowerCase())
-      );
+    if (!jobsData || !Array.isArray(jobsData.jobs)) {
+      console.error('Unexpected Remotive API response:', jobsData);
+      return res
+        .status(500)
+        .json({ error: 'Unexpected Remotive API response.' });
+    }
+
+    let jobs = jobsData.jobs;
+
+    // Apply location filtering if a location was provided
+    if (location) {
+      jobs = jobs.filter((job) => {
+        const candidateLocation = job.candidate_required_location || '';
+        return candidateLocation.toLowerCase().includes(location.toLowerCase());
+      });
     }
 
     res.json({ jobs });
   } catch (error) {
-    console.error(
-      'Error in /jobs route:',
-      error.response ? error.response.data : error.message
-    );
-    res.status(500).json({ error: 'Failed to fetch jobs' });
+    console.error('Backend error:', error.message);
+    if (error.response) {
+      console.error('Remotive API error response:', error.response.data);
+    }
+    res.status(500).json({ error: 'Failed to fetch jobs from Remotive.' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
