@@ -1,51 +1,41 @@
-// server.js
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 
 app.get('/jobs', async (req, res) => {
-  const search = req.query.search || '';
-  const location = req.query.location || '';
+  const { search = '', location = '' } = req.query;
 
   try {
-    const remotiveResponse = await axios.get(
-      `https://remotive.io/api/remote-jobs?search=${encodeURIComponent(search)}`
-    );
-    const jobsData = remotiveResponse.data;
+    const response = await axios.get('https://jsearch.p.rapidapi.com/search', {
+      params: {
+        query: `${search} ${location}`,
+        page: '1',
+        num_pages: '1',
+        country: 'us',
+        date_posted: 'all',
+      },
+      headers: {
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
+      },
+    });
 
-    if (!jobsData || !Array.isArray(jobsData.jobs)) {
-      console.error('Unexpected Remotive API response:', jobsData);
-      return res
-        .status(500)
-        .json({ error: 'Unexpected Remotive API response.' });
-    }
-
-    let jobs = jobsData.jobs;
-
-    // Apply location filtering if a location was provided
-    if (location) {
-      jobs = jobs.filter((job) => {
-        const candidateLocation = job.candidate_required_location || '';
-        return candidateLocation.toLowerCase().includes(location.toLowerCase());
-      });
-    }
-
-    res.json({ jobs });
+    res.json({ jobs: response.data.data });
   } catch (error) {
-    console.error('Backend error:', error.message);
-    if (error.response) {
-      console.error('Remotive API error response:', error.response.data);
-    }
-    res.status(500).json({ error: 'Failed to fetch jobs from Remotive.' });
+    console.error(
+      'Error fetching jobs:',
+      error.response ? error.response.data : error.message
+    );
+    res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

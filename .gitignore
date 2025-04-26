@@ -1,0 +1,36 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Vite
+dist/
+.vite/
+
+# Environment Variables
+.env
+.env.* 
+
+# Logs
+logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build output
+build/
+
+# VS Code settings
+.vscode/
+
+# React specific
+coverage/
+*.local
+.cache/
+
+# Mac system file
+*.DS_Store
